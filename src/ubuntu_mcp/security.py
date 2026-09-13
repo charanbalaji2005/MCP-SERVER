@@ -39,9 +39,6 @@ def safe_path(user_path: str, *, must_exist: bool = False) -> Path:
     root = SETTINGS.workspace_root
     candidate = Path(user_path)
 
-    # Treat both relative paths and paths that merely *look* absolute
-    # as relative to the workspace root -- an AI client should never be
-    # able to address the real filesystem root by typing "/etc/passwd".
     if candidate.is_absolute() or candidate.anchor:
         candidate = Path(*candidate.parts[1:]) if len(candidate.parts) > 1 else Path()
 
@@ -55,9 +52,6 @@ def safe_path(user_path: str, *, must_exist: bool = False) -> Path:
         ) from exc
 
     if must_exist and not resolved.exists():
-        # Not existing isn't a security violation -- surface it as a plain
-        # not-found so callers/tests can distinguish "doesn't exist" from
-        # "tried to escape the workspace".
         raise NotFoundError(f"Path '{user_path}' does not exist.")
 
     return resolved
@@ -83,7 +77,7 @@ def is_private_or_loopback(ip_str: str) -> bool:
     try:
         ip = ipaddress.ip_address(ip_str)
     except ValueError:
-        return True  # unparsable -> treat as unsafe
+        return True
     if ip.is_loopback or ip.is_link_local or ip.is_private or ip.is_reserved:
         return True
     return any(ip in net for net in _PRIVATE_NETWORKS)

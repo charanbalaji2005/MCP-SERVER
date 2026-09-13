@@ -12,9 +12,9 @@ Compatible with both mcp>=2 (class renamed MCPServer) and mcp 1.x
 
 from __future__ import annotations
 
-try:  # mcp < 2.0
+try:
     from mcp.server.fastmcp import FastMCP as _MCPServerClass
-except ModuleNotFoundError:  # mcp >= 2.0
+except ModuleNotFoundError:
     from mcp.server.mcpserver import MCPServer as _MCPServerClass
 
 from .config import SETTINGS, configure_logging
@@ -34,9 +34,6 @@ mcp = _MCPServerClass(
     ),
 )
 
-# ---------------------------------------------------------------------------
-# Filesystem
-# ---------------------------------------------------------------------------
 
 
 @mcp.tool()
@@ -152,9 +149,6 @@ async def get_file_info(path: str) -> dict:
     return await filesystem.get_file_info(path)
 
 
-# ---------------------------------------------------------------------------
-# Directories
-# ---------------------------------------------------------------------------
 
 
 @mcp.tool()
@@ -241,9 +235,6 @@ async def get_directory_size(path: str = ".") -> dict:
     return await directories.get_directory_size(path)
 
 
-# ---------------------------------------------------------------------------
-# Ubuntu / system
-# ---------------------------------------------------------------------------
 
 
 @mcp.tool()
@@ -311,9 +302,6 @@ async def get_service_status(service_name: str) -> dict:
     return await system.get_service_status(service_name)
 
 
-# ---------------------------------------------------------------------------
-# Network
-# ---------------------------------------------------------------------------
 
 
 @mcp.tool()
@@ -394,9 +382,6 @@ async def build_url(base_url: str, path: str = "", query: dict | None = None) ->
     return await network.build_url(base_url, path, query)
 
 
-# ---------------------------------------------------------------------------
-# Git (read-only; fixed subcommands only)
-# ---------------------------------------------------------------------------
 
 
 @mcp.tool()
@@ -460,9 +445,6 @@ async def git_current_branch(path: str = ".") -> dict:
     return await git_tools.git_current_branch(path)
 
 
-# ---------------------------------------------------------------------------
-# Code / text / data
-# ---------------------------------------------------------------------------
 
 
 @mcp.tool()
@@ -554,8 +536,7 @@ async def csv_get_columns(path: str) -> dict:
 def run() -> None:
     tool_count = None
     try:
-        # best-effort tool count for the startup log line only
-        tool_count = len(mcp._tool_manager.list_tools())  # type: ignore[attr-defined]
+        tool_count = len(mcp._tool_manager.list_tools())
     except Exception:
         pass
 

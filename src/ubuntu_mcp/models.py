@@ -60,7 +60,7 @@ def safe_tool(func: F) -> F:
             return ToolResult(
                 success=False, error=ErrorDetail(code=exc.code, message=exc.message)
             ).model_dump(mode="json")
-        except Exception as exc:  # noqa: BLE001 - final safety net, never re-raise
+        except Exception as exc:
             logger.exception("Unhandled error in tool %s", tool_name)
             return ToolResult(
                 success=False,
@@ -70,4 +70,4 @@ def safe_tool(func: F) -> F:
                 ),
             ).model_dump(mode="json")
 
-    return wrapper  # type: ignore[return-value]
+    return wrapper

@@ -3,87 +3,121 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ubuntu MCP Server — Web Console & Interactive Terminal</title>
-  <meta name="description" content="State-of-the-art interactive Web Terminal and MCP Tool Playground for Ubuntu MCP Server. Explore 38 sandboxed tools, monitor system metrics, and run Linux bash in real time.">
-  
-  <!-- Fonts -->
+  <title>Ubuntu MCP Console — Professional Developer Control Plane</title>
+  <meta name="description" content="Production-grade developer console and MCP tool control plane for Ubuntu Linux, Meridian Shell, and FastMCP.">
+
+  <!-- Inter & JetBrains Mono Typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  
-  <!-- Xterm.js for Linux Terminal -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- xterm.js (Retained for terminal fallback compatibility) -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css" />
   <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xterm-addon-web-links@0.9.0/lib/xterm-addon-web-links.js"></script>
 
-  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="/static/style.css?v=3.0.0">
 </head>
 <body>
   <div class="app-layout">
-    <!-- Navigation Header -->
-    <header class="app-header">
-      <div class="header-left">
-        <div class="brand-badge">
-          <div class="ubuntu-icon">
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="12" cy="12" r="10" fill="url(#ub-grad)"/>
-              <circle cx="12" cy="7" r="2" fill="#fff"/>
-              <circle cx="7.6" cy="14.5" r="2" fill="#fff"/>
-              <circle cx="16.4" cy="14.5" r="2" fill="#fff"/>
-              <defs>
-                <linearGradient id="ub-grad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
-                  <stop stop-color="#E95420"/>
-                  <stop offset="1" stop-color="#77216F"/>
-                </linearGradient>
-              </defs>
-            </svg>
-          </div>
-          <div class="brand-text">
-            <h1>Ubuntu MCP Console</h1>
-            <span class="version-tag">v1.0.0</span>
-          </div>
+    
+    <!-- Top Navigation (Vercel/Linear Style) -->
+    <header class="app-top-nav">
+      <div class="top-nav-left">
+        <button class="sidebar-toggle-btn" id="btn-toggle-sidebar" title="Toggle Sidebar (Ctrl+B)" aria-label="Toggle Sidebar">
+          <svg class="nav-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="18" height="18" x="3" y="3" rx="2"/>
+            <path d="M9 3v18"/>
+          </svg>
+        </button>
+        <div class="brand-badge" id="brand-logo-trigger">
+          <svg class="brand-logo-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/>
+          </svg>
+          <span class="brand-name">Ubuntu MCP Console</span>
+          <span class="version-tag">v2.5.0</span>
         </div>
-
-        <nav class="nav-tabs" role="tablist">
-          <button class="tab-btn active" data-tab="terminal" id="tab-terminal" role="tab" aria-selected="true">
-            <span class="tab-icon">🖥️</span>
-            <span>Linux Terminal</span>
-          </button>
-          <button class="tab-btn" data-tab="playground" id="tab-playground" role="tab" aria-selected="false">
-            <span class="tab-icon">⚡</span>
-            <span>MCP Playground</span>
-            <span class="tab-counter" id="total-tools-badge">38</span>
-          </button>
-          <button class="tab-btn" data-tab="monitor" id="tab-monitor" role="tab" aria-selected="false">
-            <span class="tab-icon">📊</span>
-            <span>System Monitor</span>
-          </button>
-          <button class="tab-btn" data-tab="integrations" id="tab-integrations" role="tab" aria-selected="false">
-            <span class="tab-icon">🔌</span>
-            <span>Integrations</span>
-          </button>
-        </nav>
+        <div class="workspace-chip">
+          <span class="workspace-sep">/</span>
+          <span class="workspace-label">workspace</span>
+          <span class="workspace-sep">/</span>
+          <span class="workspace-current">ubuntu-mcp-server</span>
+        </div>
       </div>
 
-      <div class="header-right">
-        <!-- User Profile & Sign Out -->
+      <nav class="top-nav-center" role="tablist" aria-label="Console Navigation">
+        <button class="nav-tab-btn tab-btn active" data-tab="terminal" id="tab-terminal" role="tab" aria-selected="true">
+          <svg class="nav-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="18" height="18" x="3" y="3" rx="2"/>
+            <path d="m7 15 4-4-4-4"/>
+            <path d="m13 15 4 0"/>
+          </svg>
+          <span>Terminal</span>
+        </button>
+
+        <button class="nav-tab-btn tab-btn" data-tab="playground" id="tab-playground" role="tab" aria-selected="false">
+          <svg class="nav-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+          </svg>
+          <span>MCP Playground</span>
+          <span class="nav-count-badge" id="total-tools-badge">38</span>
+        </button>
+
+        <button class="nav-tab-btn tab-btn" data-tab="portals" id="tab-portals" role="tab" aria-selected="false">
+          <svg class="nav-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/>
+            <path d="M2 12h20"/>
+          </svg>
+          <span>MCP Portals</span>
+          <span class="nav-count-badge" id="total-portals-badge">1</span>
+        </button>
+
+        <button class="nav-tab-btn tab-btn" data-tab="monitor" id="tab-monitor" role="tab" aria-selected="false">
+          <svg class="nav-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+          </svg>
+          <span>System Monitor</span>
+        </button>
+
+        <button class="nav-tab-btn tab-btn" data-tab="integrations" id="tab-integrations" role="tab" aria-selected="false">
+          <svg class="nav-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="7" height="7" x="14" y="3" rx="1"/>
+            <rect width="7" height="7" x="14" y="14" rx="1"/>
+            <rect width="7" height="7" x="3" y="14" rx="1"/>
+            <rect width="7" height="7" x="3" y="3" rx="1"/>
+          </svg>
+          <span>Integrations</span>
+        </button>
+      </nav>
+
+      <div class="top-nav-right">
+        <div class="status-chip" id="connection-status">
+          <span class="pulse-dot online"></span>
+          <span id="backend-label">Connected</span>
+        </div>
+
+        <div class="storage-status-chip">
+          <svg class="nav-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.75">
+            <rect width="18" height="18" x="3" y="3" rx="2"/>
+            <path d="M7 7h10M7 12h10M7 17h6"/>
+          </svg>
+          <span>Storage Granted</span>
+        </div>
+
         <div class="user-profile-chip" id="user-profile-chip" style="display: none;">
           <div class="user-avatar" id="user-avatar-initial">U</div>
-          <div class="user-meta">
-            <span class="user-name" id="user-display-name">Username</span>
-            <span class="perm-badge">Storage Granted</span>
-          </div>
-          <button class="logout-btn" id="btn-logout" title="Sign Out">Sign Out</button>
+          <span class="user-name" id="user-display-name">charan_balaji</span>
+          <button class="user-logout-btn" id="btn-logout" title="Sign Out">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.75">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
+            </svg>
+          </button>
         </div>
 
-        <div class="status-chip" id="connection-status">
-          <span class="pulse-dot"></span>
-          <span id="backend-label">Connecting to Ubuntu...</span>
-        </div>
-
-        <a href="https://github.com" target="_blank" class="github-link-btn" title="View on GitHub" id="btn-github">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+        <a href="https://github.com/charanbalaji2005/ubuntu-mcp-server" target="_blank" class="github-link-btn" title="View on GitHub" id="btn-github">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
             <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
           </svg>
           <span>GitHub</span>
@@ -91,240 +125,583 @@
       </div>
     </header>
 
-    <!-- Main Content Views -->
-    <main class="main-viewport">
+    <!-- App Body: Left Sidebar + Main Viewport -->
+    <div class="app-body-container">
       
-      <!-- TAB 1: REAL LINUX TERMINAL (Cloned from GitHub ttyd) -->
-      <section class="tab-pane active" id="pane-terminal">
-        <div class="terminal-shell-card">
-          <div class="terminal-bar">
-            <div class="mac-dots">
-              <span class="dot close"></span>
-              <span class="dot min"></span>
-              <span class="dot max"></span>
-            </div>
-            <div class="terminal-title">
-              <span class="term-badge">GitHub ttyd (Linux PTY)</span>
-              <span id="term-subheading">Interactive Ubuntu Linux Terminal</span>
-            </div>
-            <div class="terminal-actions">
-              <a href="http://localhost:7681" target="_blank" class="terminal-action-btn highlight-btn" title="Open full-screen terminal in a separate window">
-                ↗️ Open Fullscreen Tab (Port 7681)
-              </a>
-              <button class="terminal-action-btn" id="btn-reload-iframe" title="Reload terminal session">
-                🔄 Reload Terminal
-              </button>
-            </div>
-          </div>
-          
-          <div class="real-terminal-frame-container">
-            <iframe id="ttyd-iframe" src="http://localhost:7681" class="real-terminal-iframe" title="Ubuntu Linux Interactive Terminal"></iframe>
-          </div>
-          
-          <div class="terminal-footer">
-            <div class="footer-hint">
-              <span>⚡ Cloned from GitHub: <a href="https://github.com/tsl0922/ttyd" target="_blank" style="color: var(--accent-cyan); text-decoration: none;">tsl0922/ttyd</a></span>
-              <span>💡 Real Linux PTY: type any bash command (e.g. <code>htop</code>, <code>ls -la</code>, <code>mcp</code>)</span>
-            </div>
-            <div class="footer-meta">
-              Terminal Engine: ttyd v1.7.7 • Port: 7681
-            </div>
+      <!-- Left Sidebar (Meridian Shell Navigation) -->
+      <aside class="app-sidebar" id="app-sidebar">
+        <div class="sidebar-header-row">
+          <span class="sidebar-header-label">Workspace</span>
+          <button class="sidebar-close-btn" id="btn-close-sidebar" title="Collapse Sidebar (Ctrl+B)" aria-label="Collapse Sidebar">
+            <svg class="nav-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="18" height="18" x="3" y="3" rx="2"/>
+              <path d="M9 3v18"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Meridian Shell</div>
+          <button class="sidebar-item active" data-nav="terminal">
+            <svg class="nav-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.75">
+              <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+              <polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+            <span>Home</span>
+          </button>
+          <button class="sidebar-item" data-nav="terminal">
+            <svg class="nav-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.75">
+              <rect width="18" height="18" x="3" y="3" rx="2"/>
+              <path d="m7 15 4-4-4-4"/>
+              <path d="m13 15 4 0"/>
+            </svg>
+            <span>Terminal</span>
+            <span class="sidebar-badge">7682</span>
+          </button>
+          <button class="sidebar-item" data-nav="playground" data-cat="filesystem">
+            <svg class="nav-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.75">
+              <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>
+            </svg>
+            <span>File Manager</span>
+          </button>
+          <button class="sidebar-item" data-nav="search">
+            <svg class="nav-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.75">
+              <circle cx="11" cy="11" r="8"/>
+              <path d="m21 21-4.3-4.3"/>
+            </svg>
+            <span>Search</span>
+            <span class="sidebar-shortcut">⌘K</span>
+          </button>
+          <button class="sidebar-item" data-nav="ai-assistant">
+            <svg class="nav-icon ai-sparkle" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.75">
+              <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/>
+            </svg>
+            <span>AI Assistant</span>
+            <span class="sidebar-badge accent">Enabled</span>
+          </button>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">System</div>
+          <button class="sidebar-item" data-nav="monitor">
+            <svg class="nav-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.75">
+              <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+            </svg>
+            <span>System Overview</span>
+          </button>
+          <button class="sidebar-item" data-nav="monitor" data-sub="processes">
+            <svg class="nav-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.75">
+              <rect width="16" height="16" x="4" y="4" rx="2"/>
+              <rect width="6" height="6" x="9" y="9" rx="1"/>
+              <path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/>
+            </svg>
+            <span>Processes</span>
+          </button>
+          <button class="sidebar-item" data-nav="playground" data-cat="network">
+            <svg class="nav-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.75">
+              <rect x="16" y="16" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/><rect x="9" y="2" width="6" height="6" rx="1"/>
+              <path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"/><path d="M12 12V8"/>
+            </svg>
+            <span>Network</span>
+          </button>
+          <button class="sidebar-item" data-nav="playground" data-cat="filesystem">
+            <svg class="nav-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.75">
+              <line x1="22" x2="2" y1="12" y2="12"/>
+              <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>
+              <line x1="6" x2="6.01" y1="16" y2="16"/><line x1="10" x2="10.01" y1="16" y2="16"/>
+            </svg>
+            <span>Storage</span>
+          </button>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Developer Tools</div>
+          <button class="sidebar-item" data-nav="playground">
+            <svg class="nav-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.75">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+            <span>MCP Tools</span>
+            <span class="sidebar-badge">38</span>
+          </button>
+          <button class="sidebar-item" data-nav="portals">
+            <svg class="nav-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.75">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/>
+              <path d="M2 12h20"/>
+            </svg>
+            <span>Portals Hub</span>
+            <span class="sidebar-badge">Active</span>
+          </button>
+          <button class="sidebar-item" data-nav="integrations">
+            <svg class="nav-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.75">
+              <rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/><rect width="7" height="7" x="3" y="3" rx="1"/>
+            </svg>
+            <span>Integrations</span>
+          </button>
+          <button class="sidebar-item" data-nav="settings">
+            <svg class="nav-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.75">
+              <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+            <span>Settings</span>
+          </button>
+        </div>
+
+        <div class="sidebar-footer">
+          <div class="sidebar-footer-row">
+            <span class="status-dot-mini online"></span>
+            <span>WSL2 • Hyprland Wayland</span>
           </div>
         </div>
-      </section>
+      </aside>
 
-
-      <!-- TAB 2: MCP PLAYGROUND -->
-      <section class="tab-pane" id="pane-playground">
-        <div class="playground-layout">
-          <!-- Left: Tools Sidebar -->
-          <aside class="tools-sidebar">
-            <div class="sidebar-search">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-              </svg>
-              <input type="text" id="tool-search-input" placeholder="Search 38 tools..." autocomplete="off">
-            </div>
-
-            <div class="category-filters" id="category-filter-container">
-              <button class="cat-pill active" data-cat="all">All (38)</button>
-              <button class="cat-pill" data-cat="system">System (6)</button>
-              <button class="cat-pill" data-cat="filesystem">Filesystem (8)</button>
-              <button class="cat-pill" data-cat="directories">Directories (6)</button>
-              <button class="cat-pill" data-cat="network">Network (6)</button>
-              <button class="cat-pill" data-cat="git">Git (5)</button>
-              <button class="cat-pill" data-cat="code">Code (7)</button>
-            </div>
-
-            <div class="tools-list" id="tools-list-container">
-              <!-- Dynamically rendered tool list items -->
-            </div>
-          </aside>
-
-          <!-- Right: Tool Runner Panel -->
-          <div class="tool-runner-panel">
-            <div class="tool-header-card">
-              <div class="tool-title-row">
-                <h2 id="active-tool-name">Select a tool</h2>
-                <span class="tool-category-badge" id="active-tool-cat">category</span>
+      <!-- Main Viewport -->
+      <main class="main-viewport">
+        
+        <!-- PANE 1: Linux & Meridian Terminal Workspace -->
+        <section class="tab-pane active" id="pane-terminal">
+          <div class="terminal-workspace-container">
+            
+            <!-- Compact Status Row (Point 10) -->
+            <div class="compact-status-row">
+              <div class="status-indicator-item">
+                <span class="pulse-dot online"></span>
+                <span class="val">Connected</span>
               </div>
-              <p class="tool-description-text" id="active-tool-desc">
-                Select any MCP tool from the left to view documentation, fill arguments, and run it live.
-              </p>
-            </div>
-
-            <div class="tool-form-section">
-              <div class="section-title-row">
-                <h3>Parameters (JSON Schema)</h3>
-                <button class="ghost-btn" id="btn-reset-params">Reset Defaults</button>
+              <span class="status-sep">|</span>
+              <div class="status-indicator-item">
+                <span class="label">Storage:</span>
+                <span class="val">Granted</span>
               </div>
-              <form id="tool-params-form" class="params-form">
-                <div class="empty-params-hint" id="no-params-msg">This tool accepts no arguments. Ready to execute!</div>
-                <div id="dynamic-params-container"></div>
-              </form>
-
-              <div class="form-submit-row">
-                <button type="button" class="primary-execute-btn" id="btn-execute-tool">
-                  <span class="btn-icon">⚡</span>
-                  <span>Execute Tool</span>
-                  <span class="shortcut-hint"><kbd>Ctrl</kbd>+<kbd>Enter</kbd></span>
-                </button>
+              <span class="status-sep">|</span>
+              <div class="status-indicator-item">
+                <span class="label">Port:</span>
+                <span class="val highlight">7682</span>
+              </div>
+              <span class="status-sep">|</span>
+              <div class="status-indicator-item">
+                <span class="label">GPU:</span>
+                <span class="val">Accelerated</span>
+              </div>
+              <span class="status-sep">|</span>
+              <div class="status-indicator-item">
+                <span class="label">AI:</span>
+                <span class="val">Enabled</span>
+              </div>
+              <span class="status-sep">|</span>
+              <div class="status-indicator-item">
+                <span class="label">Git:</span>
+                <span class="val">Integrated</span>
+              </div>
+              <span class="status-sep">|</span>
+              <div class="status-indicator-item">
+                <span class="label">Multiplexing:</span>
+                <span class="val">Active</span>
               </div>
             </div>
 
-            <!-- Execution Result Card -->
-            <div class="result-card" id="result-card">
-              <div class="result-header">
-                <div class="result-header-left">
-                  <h3>Response Output</h3>
-                  <span class="result-status-tag" id="result-status-tag">Ready</span>
-                  <span class="result-latency" id="result-latency"></span>
+            <!-- Terminal Window Card -->
+            <div class="terminal-window-card">
+              
+              <!-- Terminal Toolbar (Point 6) -->
+              <div class="terminal-toolbar">
+                <div class="terminal-toolbar-left">
+                  <div class="terminal-mac-dots">
+                    <span class="terminal-dot close"></span>
+                    <span class="terminal-dot min"></span>
+                    <span class="terminal-dot max"></span>
+                  </div>
+
+                  <div class="terminal-engine-switcher" role="tablist" aria-label="Terminal Engine Selector">
+                    <button class="term-engine-btn meridian-theme active" data-engine="ttyd-meridian" data-port="7682" id="btn-engine-meridian" title="Meridian Shell 2.5 (Primary)">
+                      <svg class="nav-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                      </svg>
+                      <span>Meridian Shell 2.5</span>
+                      <span class="engine-tag primary">PRIMARY</span>
+                    </button>
+                    <button class="term-engine-btn" data-engine="ttyd-ubuntu" data-port="7681" id="btn-engine-ubuntu" title="Ubuntu Bash (Secondary)">
+                      <svg class="nav-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect width="18" height="18" x="3" y="3" rx="2"/>
+                        <path d="m7 15 4-4-4-4"/>
+                        <path d="m13 15 4 0"/>
+                      </svg>
+                      <span>Ubuntu Bash</span>
+                      <span class="engine-tag">SECONDARY</span>
+                    </button>
+                  </div>
                 </div>
-                <button class="copy-btn" id="btn-copy-result">
-                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+
+                <div class="terminal-toolbar-right">
+                  <a href="http://localhost:7682" target="_blank" class="term-action-btn accent" id="link-fullscreen-terminal" title="Open full-screen terminal in a separate window">
+                    <svg class="nav-icon" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                    </svg>
+                    <span>Fullscreen</span>
+                  </a>
+                  <button class="term-action-btn" id="btn-reload-terminal" title="Reload terminal session">
+                    <svg class="nav-icon" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/>
+                      <path d="M21 3v5h-5"/>
+                    </svg>
+                    <span>Reload</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Structured Terminal System Header (Point 6) -->
+              <div class="terminal-sysinfo-header">
+                <div class="sysinfo-user-row">
+                  <span class="sysinfo-user">charan_balaji@DESKTOP-2BM1ROT</span>
+                  <div class="sysinfo-rule"></div>
+                  <span class="autosave-badge" title="All bash/meridian shell commands auto-saved to bash history & commands log">
+                    <svg class="nav-icon" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+                    Auto-Saved
+                  </span>
+                </div>
+                <div class="sysinfo-specs-row">
+                  <span class="spec-chip">Linux 6.18.33.2-microsoft-standard-WSL2</span>
+                  <span class="spec-dot">•</span>
+                  <span class="spec-chip">Hyprland 0.56.1 (Wayland)</span>
+                  <span class="spec-dot">•</span>
+                  <span class="spec-chip">bash 5.9</span>
+                  <span class="spec-dot">•</span>
+                  <span class="spec-chip">meridian 2.5</span>
+                  <span class="spec-dot">•</span>
+                  <span class="spec-chip" id="term-subheading">0.68 GiB / 7.58 GiB</span>
+                  <span class="spec-dot">•</span>
+                  <span class="spec-chip">Uptime: 1h 29m</span>
+                </div>
+              </div>
+
+              <!-- Shell Prompt Preview (Point 7) -->
+              <div class="terminal-prompt-bar">
+                <span class="prompt-dir">~/ubuntu-mcp-server</span>
+                <span class="prompt-git">git:main</span>
+                <span class="prompt-changes">↑3 ↓1</span>
+                <span class="prompt-symbol">❯</span>
+                <span class="term-cursor"></span>
+              </div>
+
+              <!-- Real Interactive Terminal Frame -->
+              <div class="real-terminal-frame-container">
+                <iframe id="ttyd-iframe" src="http://localhost:7682" class="real-terminal-iframe" title="Interactive Terminal Workspace"></iframe>
+              </div>
+
+              <!-- Terminal Footer Bar -->
+              <div class="terminal-footer-bar">
+                <div class="footer-info-left" id="terminal-footer-hint">
+                  <span id="active-engine-label">Meridian Shell 2.5 (Primary)</span>
+                  <span>•</span>
+                  <span id="active-engine-desc">Standalone POSIX terminal & developer shell with GPU raster & git intelligence</span>
+                </div>
+                <div class="footer-info-right" id="active-engine-meta">
+                  <span class="autosave-badge">💾 Commands Auto-Saved</span>
+                  <span>Port: 7682</span>
+                  <span>•</span>
+                  <span>github.com/charanbalaji2005/Meridian-Shell</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </section>
+
+        <!-- PANE 2: MCP Tool Playground -->
+        <section class="tab-pane" id="pane-playground">
+          <div class="playground-layout">
+            
+            <!-- Tools Sidebar -->
+            <aside class="tools-sidebar">
+              <div class="sidebar-search">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input type="text" id="tool-search-input" placeholder="Search 38 tools..." autocomplete="off">
+              </div>
+
+              <div class="portal-filter-row">
+                <label for="portal-select-filter">Portal:</label>
+                <select id="portal-select-filter" class="portal-dropdown">
+                  <option value="all">All Portals</option>
+                  <option value="local" selected>Ubuntu MCP Server (Local)</option>
+                </select>
+              </div>
+
+              <div class="category-filters" id="category-filter-container">
+                <button class="cat-pill active" data-cat="all">All (38)</button>
+                <button class="cat-pill" data-cat="system">System (6)</button>
+                <button class="cat-pill" data-cat="filesystem">Filesystem (8)</button>
+                <button class="cat-pill" data-cat="directories">Directories (6)</button>
+                <button class="cat-pill" data-cat="network">Network (6)</button>
+                <button class="cat-pill" data-cat="git">Git (5)</button>
+                <button class="cat-pill" data-cat="code">Code (7)</button>
+              </div>
+
+              <div class="tools-list" id="tools-list-container">
+                <!-- Populated dynamically via app.js -->
+              </div>
+            </aside>
+
+            <!-- Tool Runner Panel -->
+            <div class="tool-runner-panel">
+              <div class="tool-header-card">
+                <div class="tool-title-row">
+                  <h2 id="active-tool-name">Select a tool</h2>
+                  <span class="tool-category-badge" id="active-tool-cat">category</span>
+                  <span class="tool-portal-badge" id="active-tool-portal">Ubuntu Local</span>
+                </div>
+                <p class="tool-description-text" id="active-tool-desc">
+                  Select any MCP tool from the left to view schema documentation, configure parameters, and execute live against the daemon.
+                </p>
+              </div>
+
+              <div class="tool-form-section">
+                <div class="section-title-row">
+                  <h3>Parameters (JSON Schema)</h3>
+                  <button class="ghost-btn" id="btn-reset-params">Reset Defaults</button>
+                </div>
+                <form id="tool-params-form" class="params-form">
+                  <div class="empty-params-hint" id="no-params-msg">This tool accepts no arguments. Ready to execute!</div>
+                  <div id="dynamic-params-container"></div>
+                </form>
+
+                <div class="form-submit-row">
+                  <button type="button" class="primary-execute-btn" id="btn-execute-tool">
+                    <svg class="nav-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                    </svg>
+                    <span>Execute Tool</span>
+                    <span class="shortcut-hint"><kbd>Ctrl</kbd>+<kbd>Enter</kbd></span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Response Card -->
+              <div class="result-card" id="result-card">
+                <div class="result-header">
+                  <div class="result-header-left">
+                    <h3>Response Output</h3>
+                    <span class="result-status-tag" id="result-status-tag">Ready</span>
+                    <span class="result-latency" id="result-latency"></span>
+                  </div>
+                  <button class="copy-btn" id="btn-copy-result">
+                    <svg class="nav-icon" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                    <span>Copy JSON</span>
+                  </button>
+                </div>
+                <pre class="json-output-viewer" id="json-output"><code>// Output will appear here after execution</code></pre>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- PANE 3: MCP Portals Hub -->
+        <section class="tab-pane" id="pane-portals">
+          <div class="portals-dashboard">
+            <div class="portals-header-row">
+              <div>
+                <h2>MCP Portals Hub</h2>
+                <p class="section-subtitle">Manage, aggregate, and browse tools across local and remote MCP server instances (SSE & Streamable-HTTP).</p>
+              </div>
+              <div class="portals-controls">
+                <button class="primary-action-btn" id="btn-open-add-portal">
+                  <svg class="nav-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
                   </svg>
-                  <span>Copy JSON</span>
+                  <span>Connect New Portal</span>
                 </button>
               </div>
-              <pre class="json-output-viewer" id="json-output"><code>// Output will appear here after execution</code></pre>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- TAB 3: SYSTEM MONITOR -->
-      <section class="tab-pane" id="pane-monitor">
-        <div class="monitor-dashboard">
-          <div class="monitor-header-row">
-            <div>
-              <h2>Live Host & Resource Monitor</h2>
-              <p class="section-subtitle">Real-time resource metrics queried directly from Ubuntu MCP system telemetry.</p>
-            </div>
-            <div class="monitor-controls">
-              <label class="toggle-switch">
-                <input type="checkbox" id="auto-refresh-toggle" checked>
-                <span class="slider"></span>
-              </label>
-              <span class="toggle-label">Auto-Refresh (3s)</span>
-              <button class="ghost-btn refresh-btn" id="btn-refresh-metrics">🔄 Refresh Now</button>
-            </div>
-          </div>
-
-          <!-- Metric Cards Grid -->
-          <div class="metrics-grid">
-            <div class="metric-card">
-              <div class="metric-card-top">
-                <span class="metric-title">CPU Utilization</span>
-                <span class="metric-icon">⚙️</span>
-              </div>
-              <div class="metric-main-val">
-                <span id="metric-cpu-val">0</span><span class="unit">%</span>
-              </div>
-              <div class="progress-track">
-                <div class="progress-fill cpu-bar" id="metric-cpu-bar" style="width: 0%"></div>
-              </div>
-              <div class="metric-subtext" id="metric-cpu-cores">Logical Cores: --</div>
             </div>
 
-            <div class="metric-card">
-              <div class="metric-card-top">
-                <span class="metric-title">Memory (RAM)</span>
-                <span class="metric-icon">🧠</span>
-              </div>
-              <div class="metric-main-val">
-                <span id="metric-ram-val">0</span><span class="unit">%</span>
-              </div>
-              <div class="progress-track">
-                <div class="progress-fill ram-bar" id="metric-ram-bar" style="width: 0%"></div>
-              </div>
-              <div class="metric-subtext" id="metric-ram-details">Used: 0 GB / 0 GB</div>
-            </div>
-
-            <div class="metric-card">
-              <div class="metric-card-top">
-                <span class="metric-title">Workspace Disk</span>
-                <span class="metric-icon">💾</span>
-              </div>
-              <div class="metric-main-val">
-                <span id="metric-disk-val">0</span><span class="unit">%</span>
-              </div>
-              <div class="progress-track">
-                <div class="progress-fill disk-bar" id="metric-disk-bar" style="width: 0%"></div>
-              </div>
-              <div class="metric-subtext" id="metric-disk-details">Used: 0 GB / 0 GB</div>
-            </div>
-          </div>
-
-          <!-- Top Processes Table -->
-          <div class="process-card">
-            <div class="process-card-header">
-              <h3>Top Running Processes</h3>
-              <span class="process-count" id="process-count">12 processes</span>
-            </div>
-            <div class="table-responsive">
-              <table class="process-table">
-                <thead>
-                  <tr>
-                    <th>PID</th>
-                    <th>Process Name</th>
-                    <th>CPU %</th>
-                    <th>Memory %</th>
-                  </tr>
-                </thead>
-                <tbody id="processes-tbody">
-                  <tr>
-                    <td colspan="4" class="table-loading">Loading process metrics...</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- TAB 4: INTEGRATIONS & GITHUB -->
-      <section class="tab-pane" id="pane-integrations">
-        <div class="integrations-container">
-          <div class="integrations-hero">
-            <h2>Connect Ubuntu MCP Server Anywhere</h2>
-            <p>Ready to deploy or push to your GitHub account. Connect Claude Desktop, Cursor, Antigravity IDE, or host in Docker.</p>
-          </div>
-
-          <div class="integration-cards-grid">
-            <!-- Card 1: Antigravity IDE -->
-            <div class="integration-box">
-              <div class="box-header">
-                <div class="box-title">
-                  <span class="box-icon">🚀</span>
-                  <h3>Antigravity IDE</h3>
+            <!-- Portals Grid / Row List -->
+            <div class="portals-grid" id="portals-grid">
+              <div class="portal-card" id="default-local-portal-card">
+                <div class="portal-card-header">
+                  <div class="portal-card-title-group">
+                    <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75">
+                      <rect width="18" height="18" x="3" y="3" rx="2"/>
+                      <path d="m7 15 4-4-4-4"/>
+                      <path d="m13 15 4 0"/>
+                    </svg>
+                    <div class="portal-title-wrapper">
+                      <div class="portal-card-title">Ubuntu MCP Server (Local)</div>
+                      <div class="portal-card-url" title="internal://local">internal://local</div>
+                    </div>
+                  </div>
+                  <span class="portal-status-pill online">
+                    <span class="pulse-dot online"></span>
+                    ONLINE
+                  </span>
                 </div>
-                <button class="copy-snippet-btn" data-target="snippet-antigravity">Copy Config</button>
+
+                <div class="portal-card-meta">
+                  <div class="portal-meta-item">
+                    <span class="portal-meta-label">Transport</span>
+                    <span class="portal-meta-value transport-tag">LOCAL</span>
+                  </div>
+                  <div class="portal-meta-item">
+                    <span class="portal-meta-label">Tools</span>
+                    <span class="portal-meta-value tools-val">38 tools</span>
+                  </div>
+                  <div class="portal-meta-item">
+                    <span class="portal-meta-label">Latency</span>
+                    <span class="portal-meta-value latency-val">&lt; 1 ms</span>
+                  </div>
+                </div>
+
+                <div class="portal-card-actions">
+                  <button class="portal-action-btn btn-sync-portal" data-id="local" title="Re-sync tools and check status">
+                    Sync
+                  </button>
+                  <button class="portal-action-btn btn-browse-portal" data-id="local" title="View tools in Playground">
+                    Browse Tools
+                  </button>
+                  <span class="portal-default-badge">Default Server</span>
+                </div>
               </div>
-              <p>Place this in <code>.agents/mcp_config.json</code> in your project root.</p>
-              <pre><code id="snippet-antigravity">{
+            </div>
+          </div>
+        </section>
+
+        <!-- PANE 4: System Monitor -->
+        <section class="tab-pane" id="pane-monitor">
+          <div class="monitor-dashboard">
+            <div class="monitor-header-row">
+              <div>
+                <h2>Live Host & Resource Monitor</h2>
+                <p class="section-subtitle">Real-time resource telemetry queried directly from Ubuntu MCP host subsystem.</p>
+              </div>
+              <div class="monitor-controls">
+                <label class="toggle-switch">
+                  <input type="checkbox" id="auto-refresh-toggle" checked>
+                  <span class="slider"></span>
+                </label>
+                <span class="toggle-label">Auto-Refresh (3s)</span>
+                <button class="ghost-btn refresh-btn" id="btn-refresh-metrics">
+                  <svg class="nav-icon" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/>
+                    <path d="M21 3v5h-5"/>
+                  </svg>
+                  <span>Refresh Now</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Minimal Metrics Grid (Point 11) -->
+            <div class="metrics-grid">
+              <div class="metric-card">
+                <div class="metric-card-top">
+                  <span class="metric-title">CPU Utilization</span>
+                  <svg class="nav-icon metric-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75">
+                    <rect width="16" height="16" x="4" y="4" rx="2"/>
+                    <rect width="6" height="6" x="9" y="9" rx="1"/>
+                    <path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/>
+                  </svg>
+                </div>
+                <div class="metric-main-val">
+                  <span id="metric-cpu-val">0</span><span class="unit">%</span>
+                </div>
+                <div class="progress-track">
+                  <div class="progress-fill cpu-bar" id="metric-cpu-bar" style="width: 0%"></div>
+                </div>
+                <div class="metric-subtext" id="metric-cpu-cores">Logical Cores: --</div>
+              </div>
+
+              <div class="metric-card">
+                <div class="metric-card-top">
+                  <span class="metric-title">Memory (RAM)</span>
+                  <svg class="nav-icon metric-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75">
+                    <path d="M6 19v-3M10 19v-3M14 19v-3M18 19v-3M6 5v3M10 5v3M14 5v3M18 5v3"/>
+                    <rect width="20" height="8" x="2" y="8" rx="1"/>
+                  </svg>
+                </div>
+                <div class="metric-main-val">
+                  <span id="metric-ram-val">0</span><span class="unit">%</span>
+                </div>
+                <div class="progress-track">
+                  <div class="progress-fill ram-bar" id="metric-ram-bar" style="width: 0%"></div>
+                </div>
+                <div class="metric-subtext" id="metric-ram-details">Used: 0 GB / 0 GB</div>
+              </div>
+
+              <div class="metric-card">
+                <div class="metric-card-top">
+                  <span class="metric-title">Workspace Disk</span>
+                  <svg class="nav-icon metric-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75">
+                    <line x1="22" x2="2" y1="12" y2="12"/>
+                    <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>
+                    <line x1="6" x2="6.01" y1="16" y2="16"/>
+                  </svg>
+                </div>
+                <div class="metric-main-val">
+                  <span id="metric-disk-val">0</span><span class="unit">%</span>
+                </div>
+                <div class="progress-track">
+                  <div class="progress-fill disk-bar" id="metric-disk-bar" style="width: 0%"></div>
+                </div>
+                <div class="metric-subtext" id="metric-disk-details">Used: 0 GB / 0 GB</div>
+              </div>
+            </div>
+
+            <!-- Minimal Processes Table -->
+            <div class="process-card">
+              <div class="process-card-header">
+                <h3>Top Running Processes</h3>
+                <span class="process-count" id="process-count">12 processes</span>
+              </div>
+              <div class="table-responsive">
+                <table class="process-table">
+                  <thead>
+                    <tr>
+                      <th>PID</th>
+                      <th>Process Name</th>
+                      <th>CPU %</th>
+                      <th>Memory %</th>
+                    </tr>
+                  </thead>
+                  <tbody id="processes-tbody">
+                    <tr>
+                      <td colspan="4" class="table-loading">Loading process metrics...</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- PANE 5: Integrations -->
+        <section class="tab-pane" id="pane-integrations">
+          <div class="integrations-container">
+            <div class="integrations-hero">
+              <h2>Developer Client Integrations</h2>
+              <p>Configure Claude Desktop, Cursor, Antigravity IDE, or host in Docker containers seamlessly.</p>
+            </div>
+
+            <div class="integration-cards-grid">
+              
+              <div class="integration-box">
+                <div class="box-header">
+                  <div class="box-title">
+                    <svg class="nav-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75">
+                      <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+                      <polyline points="2 17 12 22 22 17"/>
+                      <polyline points="2 12 12 17 22 12"/>
+                    </svg>
+                    <h3>Antigravity IDE</h3>
+                  </div>
+                  <button class="copy-snippet-btn" data-target="snippet-antigravity">Copy Config</button>
+                </div>
+                <p>Place this in <code>.agents/mcp_config.json</code> in your project workspace.</p>
+                <pre><code id="snippet-antigravity">{
   "mcpServers": {
     "ubuntu-mcp": {
       "command": "cmd.exe",
@@ -332,19 +709,22 @@
     }
   }
 }</code></pre>
-            </div>
-
-            <!-- Card 2: Claude Desktop -->
-            <div class="integration-box">
-              <div class="box-header">
-                <div class="box-title">
-                  <span class="box-icon">🤖</span>
-                  <h3>Claude Desktop</h3>
-                </div>
-                <button class="copy-snippet-btn" data-target="snippet-claude">Copy Config</button>
               </div>
-              <p>Add to <code>%APPDATA%\Claude\claude_desktop_config.json</code>:</p>
-              <pre><code id="snippet-claude">{
+
+              <div class="integration-box">
+                <div class="box-header">
+                  <div class="box-title">
+                    <svg class="nav-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75">
+                      <rect width="18" height="18" x="3" y="3" rx="2"/>
+                      <circle cx="9" cy="9" r="2"/>
+                      <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
+                    </svg>
+                    <h3>Claude Desktop</h3>
+                  </div>
+                  <button class="copy-snippet-btn" data-target="snippet-claude">Copy Config</button>
+                </div>
+                <p>Add to <code>%APPDATA%\Claude\claude_desktop_config.json</code>:</p>
+                <pre><code id="snippet-claude">{
   "mcpServers": {
     "ubuntu-mcp": {
       "command": "wsl.exe",
@@ -359,68 +739,105 @@
     }
   }
 }</code></pre>
-            </div>
-
-            <!-- Card 3: Cursor -->
-            <div class="integration-box">
-              <div class="box-header">
-                <div class="box-title">
-                  <span class="box-icon">⚡</span>
-                  <h3>Cursor / Windsurf</h3>
-                </div>
-                <button class="copy-snippet-btn" data-target="snippet-cursor">Copy Config</button>
               </div>
-              <p>Settings &gt; Features &gt; MCP &gt; Add New MCP Server:</p>
-              <pre><code id="snippet-cursor">Type: command
+
+              <div class="integration-box">
+                <div class="box-header">
+                  <div class="box-title">
+                    <svg class="nav-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75">
+                      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                    </svg>
+                    <h3>Cursor / Windsurf</h3>
+                  </div>
+                  <button class="copy-snippet-btn" data-target="snippet-cursor">Copy Config</button>
+                </div>
+                <p>Settings &gt; Features &gt; MCP &gt; Add New MCP Server:</p>
+                <pre><code id="snippet-cursor">Type: command
 Name: ubuntu-mcp
 Command: wsl.exe -d Ubuntu -- /home/charan_balaji/.venvs/ubuntu-mcp/bin/python3 -m ubuntu_mcp</code></pre>
-            </div>
-
-            <!-- Card 4: Docker Run -->
-            <div class="integration-box">
-              <div class="box-header">
-                <div class="box-title">
-                  <span class="box-icon">🐳</span>
-                  <h3>Docker Deployment</h3>
-                </div>
-                <button class="copy-snippet-btn" data-target="snippet-docker">Copy Command</button>
               </div>
-              <p>One-command containerized execution with Web GUI and Terminal:</p>
-              <pre><code id="snippet-docker">docker build -t ubuntu-mcp-server .
+
+              <div class="integration-box">
+                <div class="box-header">
+                  <div class="box-title">
+                    <svg class="nav-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75">
+                      <rect width="7" height="7" x="14" y="3" rx="1"/>
+                      <rect width="7" height="7" x="14" y="14" rx="1"/>
+                      <rect width="7" height="7" x="3" y="14" rx="1"/>
+                      <rect width="7" height="7" x="3" y="3" rx="1"/>
+                    </svg>
+                    <h3>Docker Deployment</h3>
+                  </div>
+                  <button class="copy-snippet-btn" data-target="snippet-docker">Copy Command</button>
+                </div>
+                <p>One-command containerized execution with Web GUI and Terminal:</p>
+                <pre><code id="snippet-docker">docker build -t ubuntu-mcp-server .
 docker run -d -p 8000:8000 -p 8765:8765 \
   -v $(pwd)/workspace:/app/workspace \
   ubuntu-mcp-server</code></pre>
+              </div>
+
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-    </main>
+      </main>
+    </div>
+
+    <!-- Bottom Developer Status Bar (28px) -->
+    <footer class="app-status-bar">
+      <div class="status-bar-left">
+        <span class="status-bar-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
+            <rect width="18" height="18" x="3" y="3" rx="2"/>
+            <path d="m7 15 4-4-4-4"/>
+            <path d="m13 15 4 0"/>
+          </svg>
+          Meridian Shell 2.5
+        </span>
+        <span class="status-bar-sep">|</span>
+        <span class="status-bar-item">
+          <span class="pulse-dot-mini online"></span>
+          Connected
+        </span>
+        <span class="status-bar-sep">|</span>
+        <span class="status-bar-item" id="sb-cpu">CPU 14%</span>
+        <span class="status-bar-sep">|</span>
+        <span class="status-bar-item" id="sb-ram">Memory 3.2 / 7.6 GB</span>
+      </div>
+      <div class="status-bar-right">
+        <span class="status-bar-item">
+          <svg class="nav-icon git-branch-icon" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="6" x2="6" y1="3" y2="15"/>
+            <circle cx="18" cy="6" r="3"/>
+            <circle cx="6" cy="18" r="3"/>
+            <path d="M18 9a9 9 0 0 1-9 9"/>
+          </svg>
+          git:main
+        </span>
+        <span class="status-bar-sep">|</span>
+        <span class="status-bar-item">GPU Accelerated</span>
+        <span class="status-bar-sep">|</span>
+        <span class="status-bar-item">Port: 7682</span>
+        <span class="status-bar-sep">|</span>
+        <span class="status-bar-item">UTF-8</span>
+      </div>
+    </footer>
+
   </div>
 
-  <!-- AUTHENTICATION & DEVICE STORAGE PERMISSION MODAL -->
-  <div class="auth-modal-backdrop" id="auth-modal">
+  <!-- Authentication & Device Storage Permission Modal -->
+  <div class="auth-modal-backdrop" id="auth-modal" style="display: none;">
     <div class="auth-modal-card">
       
-      <!-- MODE 1: FIRST-TIME SETUP & REGISTRATION -->
+      <!-- Register View -->
       <div class="auth-view" id="view-register">
         <div class="auth-card-header">
-          <div class="auth-ubuntu-badge">
-            <svg viewBox="0 0 24 24" width="28" height="28" fill="none">
-              <circle cx="12" cy="12" r="10" fill="url(#ub-grad-auth)"/>
-              <circle cx="12" cy="7" r="2" fill="#fff"/>
-              <circle cx="7.6" cy="14.5" r="2" fill="#fff"/>
-              <circle cx="16.4" cy="14.5" r="2" fill="#fff"/>
-              <defs>
-                <linearGradient id="ub-grad-auth" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
-                  <stop stop-color="#E95420"/>
-                  <stop offset="1" stop-color="#77216F"/>
-                </linearGradient>
-              </defs>
-            </svg>
-          </div>
+          <svg class="nav-icon" viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="var(--accent-violet)" stroke-width="1.75">
+            <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/>
+          </svg>
           <h2>Welcome to Ubuntu MCP</h2>
-          <p class="auth-subtitle">Create your admin credentials & grant local storage access to begin.</p>
+          <p class="auth-subtitle">Configure administrator credentials & grant device storage access.</p>
         </div>
 
         <form id="register-form" class="auth-form">
@@ -439,15 +856,16 @@ docker run -d -p 8000:8000 -p 8765:8765 \
             <input type="password" id="reg-password-confirm" placeholder="Confirm your password" required autocomplete="new-password">
           </div>
 
-          <!-- Device & Local Storage Permission Card -->
           <div class="storage-permission-card">
-            <div class="perm-card-icon">💾</div>
-            <div class="perm-card-content">
-              <h4>Device & Storage Permission Request</h4>
-              <p>Ubuntu MCP Server requires access to your local filesystem inside the workspace sandbox (<code id="perm-workspace-path">./workspace</code>) and browser LocalStorage for session persistence.</p>
+            <svg class="nav-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="var(--accent-violet)" stroke-width="1.75">
+              <rect width="18" height="18" x="3" y="3" rx="2"/>
+              <path d="M7 7h10M7 12h10M7 17h6"/>
+            </svg>
+            <div>
+              <h4>Device & Storage Permission</h4>
+              <p>Ubuntu MCP Server requires access to your local filesystem inside the workspace sandbox (<code id="perm-workspace-path">./workspace</code>) and browser LocalStorage.</p>
               <label class="perm-checkbox-label">
                 <input type="checkbox" id="reg-storage-perm" required checked>
-                <span class="perm-checkbox-custom"></span>
                 <span>I grant permission to access this device's local storage and files.</span>
               </label>
             </div>
@@ -456,17 +874,20 @@ docker run -d -p 8000:8000 -p 8765:8765 \
           <div class="auth-error-msg" id="reg-error-msg" style="display: none;"></div>
 
           <button type="submit" class="auth-submit-btn" id="btn-submit-register">
-            <span>🚀 Complete Setup & Launch Terminal</span>
+            Launch Console & Terminal
           </button>
         </form>
       </div>
 
-      <!-- MODE 2: RETURNING USER SIGN IN -->
+      <!-- Login View -->
       <div class="auth-view" id="view-login" style="display: none;">
         <div class="auth-card-header">
-          <div class="auth-lock-badge">🔒</div>
+          <svg class="nav-icon" viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="var(--accent-violet)" stroke-width="1.75">
+            <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
           <h2>Sign In to Terminal Console</h2>
-          <p class="auth-subtitle">Enter your credentials to unlock the Linux terminal and 38 MCP tools.</p>
+          <p class="auth-subtitle">Enter your credentials to access the Linux terminal and 38 MCP tools.</p>
         </div>
 
         <form id="login-form" class="auth-form">
@@ -483,7 +904,7 @@ docker run -d -p 8000:8000 -p 8765:8765 \
           <div class="auth-error-msg" id="login-error-msg" style="display: none;"></div>
 
           <button type="submit" class="auth-submit-btn" id="btn-submit-login">
-            <span>Sign In to Console</span>
+            Sign In to Console
           </button>
         </form>
       </div>
@@ -491,9 +912,58 @@ docker run -d -p 8000:8000 -p 8765:8765 \
     </div>
   </div>
 
-  <!-- Toast Notification -->
-  <div class="toast-popup" id="toast-popup">Copied to clipboard!</div>
+  <!-- Connect MCP Portal Modal -->
+  <div class="auth-modal-backdrop" id="portal-modal" style="display: none;">
+    <div class="auth-modal-card">
+      <div class="auth-card-header">
+        <svg class="nav-icon" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="var(--accent-violet)" stroke-width="1.75">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/>
+          <path d="M2 12h20"/>
+        </svg>
+        <h2>Connect MCP Portal</h2>
+        <p class="auth-subtitle">Add any remote, microservice, or local MCP server (Streamable-HTTP or SSE).</p>
+      </div>
 
-  <script src="/static/app.js"></script>
+      <form id="add-portal-form" class="auth-form">
+        <div class="auth-input-group">
+          <label for="new-portal-name">Portal Display Name</label>
+          <input type="text" id="new-portal-name" placeholder="e.g. Remote Ubuntu, GitHub MCP, Stripe" required>
+        </div>
+
+        <div class="auth-input-group">
+          <label for="new-portal-url">MCP Endpoint URL</label>
+          <input type="url" id="new-portal-url" placeholder="http://127.0.0.1:8765/mcp or https://example.com/sse" required>
+        </div>
+
+        <div class="auth-input-group">
+          <label for="new-portal-transport">Transport Protocol</label>
+          <select id="new-portal-transport" class="param-select">
+            <option value="streamable-http" selected>Streamable-HTTP (MCP 2024-11-05)</option>
+            <option value="sse">Server-Sent Events (SSE)</option>
+          </select>
+        </div>
+
+        <div class="auth-input-group">
+          <label for="new-portal-auth">Authorization Header (Optional)</label>
+          <input type="text" id="new-portal-auth" placeholder="Bearer your-token-if-required">
+        </div>
+
+        <div class="auth-error-msg" id="portal-error-msg" style="display: none;"></div>
+
+        <div class="modal-actions-row">
+          <button type="button" class="ghost-btn cancel-btn" id="btn-cancel-portal">Cancel</button>
+          <button type="submit" class="auth-submit-btn" id="btn-submit-portal" style="flex: 1;">
+            Connect Portal
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Feedback Toast Popup -->
+  <div class="toast-popup" id="toast-popup">Action completed</div>
+
+  <script src="/static/app.js?v=3.0.0"></script>
 </body>
 </html>

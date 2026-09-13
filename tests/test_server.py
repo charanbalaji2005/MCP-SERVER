@@ -6,7 +6,6 @@ from ubuntu_mcp.server import mcp
 async def test_all_tools_registered():
     tools = await mcp.list_tools()
     names = {t.name for t in tools}
-    # spot-check one tool from each category rather than an exhaustive list
     for expected in (
         "read_file",
         "list_directory",
@@ -37,3 +36,15 @@ async def test_call_tool_blocks_traversal(workspace):
     result = await mcp.call_tool("read_file", {"path": "../../etc/passwd"})
     payload = json.loads(result.content[0].text)
     assert payload["success"] is False
+
+
+async def test_portals_manager_default():
+    from ubuntu_mcp.web.portals import PORTALS
+    portals = await PORTALS.list_portals()
+    assert len(portals) >= 1
+    local = next((p for p in portals if p["id"] == "local"), None)
+    assert local is not None
+    assert local["status"] == "online"
+    assert local["is_default"] is True
+    assert local["tools_count"] >= 35
+

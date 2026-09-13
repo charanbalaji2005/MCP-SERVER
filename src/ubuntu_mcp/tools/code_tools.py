@@ -25,7 +25,7 @@ _PROJECT_MARKERS = {
     "PHP": ["composer.json"],
 }
 
-_REGEX_TIMEOUT_PATTERN_LEN = 200  # crude guard against pathological patterns
+_REGEX_TIMEOUT_PATTERN_LEN = 200
 
 
 async def detect_project_type(path: str = ".") -> dict:

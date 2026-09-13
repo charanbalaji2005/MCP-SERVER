@@ -1,11 +1,12 @@
-"""Ubuntu MCP Server Web GUI & Interactive Terminal Server with Authentication.
+"""Ubuntu MCP Server Web GUI, Interactive Terminal & MCP Portals Hub.
 
 Provides:
 - User onboarding / Registration (First-time setup)
 - Device & Local Storage permission consent dialog & tracking
 - Authentication (PBKDF2-HMAC-SHA256, session tokens)
+- MCP Portals Hub (Register, aggregate, and browse multiple external MCP servers)
 - Protected WebSocket endpoint (/ws/terminal) bridging xterm.js to Ubuntu/WSL bash
-- REST API (/api/tools, /api/call-tool, /api/system-metrics, /api/status, /api/auth/*)
+- REST API (/api/tools, /api/call-tool, /api/system-metrics, /api/status, /api/auth/*, /api/portals/*)
 - Static files for the web dashboard & terminal interface
 """
 
@@ -16,6 +17,7 @@ import json
 import os
 import platform
 import shutil
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -24,6 +26,7 @@ import psutil
 import uvicorn
 from starlette.applications import Starlette
 from starlette.middleware import Middleware
+from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import FileResponse, JSONResponse
 from starlette.routing import Route, WebSocketRoute
@@ -33,18 +36,17 @@ from starlette.websockets import WebSocket, WebSocketDisconnect
 from ..config import SETTINGS
 from ..server import mcp
 from .auth import AUTH
+from .portals import PORTALS
 
 STATIC_DIR = Path(__file__).parent / "static"
 
 TOOL_CATEGORIES: dict[str, str] = {
-    # System
     "get_system_info": "system",
     "get_cpu_info": "system",
     "get_memory_info": "system",
     "get_disk_info": "system",
     "list_processes": "system",
     "get_service_status": "system",
-    # Filesystem
     "read_file": "filesystem",
     "write_file": "filesystem",
     "append_file": "filesystem",
@@ -53,27 +55,23 @@ TOOL_CATEGORIES: dict[str, str] = {
     "move_file": "filesystem",
     "file_exists": "filesystem",
     "get_file_info": "filesystem",
-    # Directories
     "list_directory": "directories",
     "create_directory": "directories",
     "delete_directory": "directories",
     "directory_exists": "directories",
     "find_files": "directories",
     "get_directory_size": "directories",
-    # Network
     "fetch_url": "network",
     "check_connectivity": "network",
     "resolve_dns": "network",
     "validate_url": "network",
     "parse_url": "network",
     "build_url": "network",
-    # Git
     "git_status": "git",
     "git_log": "git",
     "git_diff": "git",
     "git_branches": "git",
     "git_current_branch": "git",
-    # Code & Data
     "detect_project_type": "code",
     "search_text_in_files": "code",
     "count_words": "code",
@@ -91,22 +89,81 @@ def _get_bearer_token(request) -> str | None:
     return request.query_params.get("token")
 
 
-def _detect_terminal_command() -> tuple[list[str], str]:
-    """Determine the command line to spawn the Linux terminal."""
+def _detect_terminal_command(shell: str = "meridian") -> tuple[list[str], str]:
     is_win = platform.system() == "Windows"
+    workspace_str = "/mnt/d/ubuntu-mcp-server/ubuntu-mcp-server/workspace"
     if is_win:
         wsl_path = shutil.which("wsl.exe") or "C:\\Windows\\System32\\wsl.exe"
         if os.path.exists(wsl_path):
-            return [wsl_path, "-d", "Ubuntu", "--", "bash"], "Ubuntu WSL (Linux)"
+            if shell == "bash":
+                return [wsl_path, "-d", "Ubuntu", "--cd", workspace_str, "--", "bash", "-i"], "Ubuntu WSL Bash (Secondary)"
+            return [wsl_path, "-d", "Ubuntu", "--cd", workspace_str, "--", "/usr/local/bin/meridian-shell"], "Meridian Shell 2.5 (Primary)"
         return ["powershell.exe", "-NoLogo"], "PowerShell (Windows Fallback)"
     else:
-        bash_path = shutil.which("bash") or "/bin/bash"
-        return [bash_path], "Native Linux (Bash)"
+        if shell == "bash":
+            bash_path = shutil.which("bash") or "/bin/bash"
+            return [bash_path], "Native Linux (Bash)"
+        meridian_path = shutil.which("meridian-shell") or "/usr/local/bin/meridian-shell"
+        return [meridian_path], "Meridian Shell 2.5 (Primary)"
 
 
-# ---------------------------------------------------------------------------
-# Auth Endpoints
-# ---------------------------------------------------------------------------
+def _ensure_ttyd_daemons():
+    import socket
+
+    def is_port_open(port: int) -> bool:
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.settimeout(0.4)
+                return s.connect_ex(("127.0.0.1", port)) == 0
+        except Exception:
+            return False
+
+    is_win = platform.system() == "Windows"
+    if is_win:
+        wsl_path = shutil.which("wsl.exe") or "C:\\Windows\\System32\\wsl.exe"
+        if not os.path.exists(wsl_path):
+            return
+
+        workspace_wsl = "/mnt/d/ubuntu-mcp-server/ubuntu-mcp-server/workspace"
+        flags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+
+        # 1. Primary Terminal: Meridian Shell on Port 7682
+        if not is_port_open(7682):
+            try:
+                subprocess.Popen(
+                    [
+                        wsl_path, "-d", "Ubuntu", "-u", "root", "--cd", workspace_wsl,
+                        "--", "ttyd", "-W", "-p", "7682",
+                        "-t", "fontSize=15", "-t", "cursorBlink=true", "-t", "cursorStyle=block",
+                        "-t", "theme={'background':'#0a0e17'}",
+                        "/usr/local/bin/meridian-shell",
+                    ],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    creationflags=flags,
+                )
+            except Exception:
+                pass
+
+        # 2. Secondary Terminal: Ubuntu Bash on Port 7681 (with auto-save history enabled)
+        if not is_port_open(7681):
+            try:
+                subprocess.Popen(
+                    [
+                        wsl_path, "-d", "Ubuntu", "-u", "root", "--cd", workspace_wsl,
+                        "--", "ttyd", "-W", "-p", "7681",
+                        "-t", "fontSize=15", "-t", "cursorBlink=true", "-t", "cursorStyle=block",
+                        "-t", "theme={'background':'#06090e'}",
+                        "bash", "-i",
+                    ],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    creationflags=flags,
+                )
+            except Exception:
+                pass
+
+
 async def api_auth_status(request):
     """Check if first-time user setup is required."""
     setup_required = not AUTH.is_setup_completed()
@@ -206,13 +263,64 @@ async def api_auth_logout(request):
     return JSONResponse({"success": True, "message": "Logged out successfully."})
 
 
-# ---------------------------------------------------------------------------
-# General & MCP Endpoints
-# ---------------------------------------------------------------------------
+async def api_portals_list(request):
+    """List all registered MCP portals."""
+    portals = await PORTALS.list_portals()
+    return JSONResponse({"success": True, "portals": portals})
+
+
+async def api_portals_add(request):
+    """Register and probe a new external MCP portal."""
+    if AUTH.is_setup_completed():
+        token = _get_bearer_token(request)
+        if not AUTH.validate_session(token):
+            return JSONResponse({"success": False, "error": "Unauthorized"}, status_code=401)
+
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"success": False, "error": "Invalid JSON body"}, status_code=400)
+
+    name = body.get("name", "")
+    url = body.get("url", "")
+    transport = body.get("transport", "streamable-http")
+    auth_header = body.get("auth_header")
+
+    ok, msg, portal_data = await PORTALS.add_portal(name, url, transport, auth_header)
+    if not ok:
+        return JSONResponse({"success": False, "error": msg}, status_code=400)
+
+    return JSONResponse({"success": True, "message": msg, "portal": portal_data})
+
+
+async def api_portals_sync(request):
+    """Re-probe and refresh tools from a specific portal."""
+    portal_id = request.path_params.get("portal_id")
+    ok, msg, portal_data = await PORTALS.sync_portal(portal_id)
+    if not ok:
+        return JSONResponse({"success": False, "error": msg, "portal": portal_data}, status_code=400)
+    return JSONResponse({"success": True, "message": msg, "portal": portal_data})
+
+
+async def api_portals_delete(request):
+    """Remove a custom MCP portal."""
+    if AUTH.is_setup_completed():
+        token = _get_bearer_token(request)
+        if not AUTH.validate_session(token):
+            return JSONResponse({"success": False, "error": "Unauthorized"}, status_code=401)
+
+    portal_id = request.path_params.get("portal_id")
+    ok, msg = PORTALS.delete_portal(portal_id)
+    if not ok:
+        return JSONResponse({"success": False, "error": msg}, status_code=400)
+    return JSONResponse({"success": True, "message": msg})
+
+
 async def api_status(request):
     """Return status and host information."""
     cmd, term_label = _detect_terminal_command()
     tools = await mcp.list_tools()
+    portals = await PORTALS.list_portals()
     return JSONResponse(
         {
             "status": "online",
@@ -222,6 +330,7 @@ async def api_status(request):
             "host_os": platform.system(),
             "host_release": platform.release(),
             "tools_count": len(tools),
+            "portals_count": len(portals),
             "workspace": str(SETTINGS.workspace_root),
             "transport": SETTINGS.transport,
             "auth_enabled": True,
@@ -231,26 +340,49 @@ async def api_status(request):
 
 
 async def api_tools(request):
-    """List all registered MCP tools with schema and categories."""
-    tools = await mcp.list_tools()
+    """List all tools across all connected portals (or filter by portal_id)."""
+    filter_portal = request.query_params.get("portal")
+    portals = await PORTALS.list_portals()
     result = []
-    for t in tools:
-        cat = TOOL_CATEGORIES.get(t.name, "general")
-        schema = t.input_schema if hasattr(t, "input_schema") else {}
-        result.append(
-            {
-                "name": t.name,
-                "category": cat,
-                "description": t.description or "",
-                "schema": schema,
-            }
-        )
+
+    if not filter_portal or filter_portal == "local":
+        local_tools = await mcp.list_tools()
+        for t in local_tools:
+            cat = TOOL_CATEGORIES.get(t.name, "general")
+            schema = t.input_schema if hasattr(t, "input_schema") else {}
+            result.append(
+                {
+                    "portal_id": "local",
+                    "portal_name": "Ubuntu MCP Server",
+                    "name": t.name,
+                    "category": cat,
+                    "description": t.description or "",
+                    "schema": schema,
+                }
+            )
+
+    for p in portals:
+        if p["id"] == "local":
+            continue
+        if filter_portal and filter_portal != p["id"]:
+            continue
+        for t in p.get("tools", []):
+            result.append(
+                {
+                    "portal_id": p["id"],
+                    "portal_name": p["name"],
+                    "name": t["name"],
+                    "category": "remote",
+                    "description": t.get("description", ""),
+                    "schema": t.get("schema", {}),
+                }
+            )
+
     return JSONResponse({"success": True, "tools": result})
 
 
 async def api_call_tool(request):
-    """Execute any of the MCP tools (Auth Protected)."""
-    # Verify auth if user setup is complete
+    """Execute any of the MCP tools (supports multi-portal dispatch)."""
     if AUTH.is_setup_completed():
         token = _get_bearer_token(request)
         user = AUTH.validate_session(token)
@@ -270,6 +402,7 @@ async def api_call_tool(request):
 
     tool_name = body.get("tool")
     args = body.get("arguments", {})
+    portal_id = body.get("portal_id", "local")
 
     if not tool_name:
         return JSONResponse(
@@ -277,45 +410,22 @@ async def api_call_tool(request):
             status_code=400,
         )
 
-    start_time = time.perf_counter()
-    try:
-        call_res = await mcp.call_tool(tool_name, args)
-        duration_ms = round((time.perf_counter() - start_time) * 1000, 2)
-
-        data = None
-        for item in call_res.content:
-            if getattr(item, "type", None) == "text":
-                try:
-                    data = json.loads(item.text)
-                except Exception:
-                    data = item.text
-                break
-
-        return JSONResponse(
-            {
-                "success": not call_res.is_error,
-                "tool": tool_name,
-                "duration_ms": duration_ms,
-                "data": data,
-                "error": None if not call_res.is_error else "Tool execution failed",
-            }
-        )
-    except Exception as exc:
-        duration_ms = round((time.perf_counter() - start_time) * 1000, 2)
-        return JSONResponse(
-            {
-                "success": False,
-                "tool": tool_name,
-                "duration_ms": duration_ms,
-                "data": None,
-                "error": {"message": str(exc)},
-            },
-            status_code=500,
-        )
+    ok, data, duration_ms, err = await PORTALS.call_tool(portal_id, tool_name, args)
+    return JSONResponse(
+        {
+            "success": ok,
+            "portal_id": portal_id,
+            "tool": tool_name,
+            "duration_ms": duration_ms,
+            "data": data,
+            "error": None if ok else {"message": err or "Execution failed"},
+        },
+        status_code=200 if ok else 500,
+    )
 
 
 async def api_system_metrics(request):
-    """Get live CPU, memory, disk, and process stats (Auth Protected)."""
+    """Get live CPU, memory, disk, and process stats."""
     if AUTH.is_setup_completed():
         token = _get_bearer_token(request)
         if not AUTH.validate_session(token):
@@ -359,21 +469,21 @@ async def api_system_metrics(request):
 
 
 async def terminal_websocket_endpoint(websocket: WebSocket):
-    """Interactive bidirectional terminal WebSocket with Session Authentication."""
+    """Interactive bidirectional terminal WebSocket."""
     await websocket.accept()
 
-    # Validate Auth token
     token = websocket.query_params.get("token")
     user = None
     if AUTH.is_setup_completed():
         user = AUTH.validate_session(token)
         if not user:
-            await websocket.send_text("\r\n\x1b[1;31m[AUTH ERROR] Unauthorized. Please sign in through the Web Console.\x1b[0m\r\n")
+            await websocket.send_text("\r\n\x1b[1;31m[AUTH ERROR] Unauthorized. Please sign in.\x1b[0m\r\n")
             await websocket.close(code=1008)
             return
 
     username = user.username if user else "guest"
-    cmd, label = _detect_terminal_command()
+    shell_choice = websocket.query_params.get("shell", "bash")
+    cmd, label = _detect_terminal_command(shell=shell_choice)
     welcome_banner = (
         f"\r\n\x1b[1;38;5;208m   __  ____                     __               __  ___ __________ \x1b[0m\r\n"
         f"\x1b[1;38;5;208m  / / / / /_  __  ______  / /___  __     /  |/  / ____/ __ \\\x1b[0m\r\n"
@@ -419,8 +529,6 @@ async def terminal_websocket_endpoint(websocket: WebSocket):
                                 proc.stdin.write(raw_input.encode("utf-8"))
                                 await proc.stdin.drain()
                                 continue
-                            elif msg.get("type") == "resize":
-                                continue
                     except (json.JSONDecodeError, TypeError):
                         pass
 
@@ -464,13 +572,15 @@ async def index_page(request):
 
 routes = [
     Route("/", endpoint=index_page),
-    # Auth
     Route("/api/auth/status", endpoint=api_auth_status, methods=["GET"]),
     Route("/api/auth/register", endpoint=api_auth_register, methods=["POST"]),
     Route("/api/auth/login", endpoint=api_auth_login, methods=["POST"]),
     Route("/api/auth/me", endpoint=api_auth_me, methods=["GET"]),
     Route("/api/auth/logout", endpoint=api_auth_logout, methods=["POST"]),
-    # Server & MCP
+    Route("/api/portals", endpoint=api_portals_list, methods=["GET"]),
+    Route("/api/portals", endpoint=api_portals_add, methods=["POST"]),
+    Route("/api/portals/{portal_id}/sync", endpoint=api_portals_sync, methods=["POST"]),
+    Route("/api/portals/{portal_id}", endpoint=api_portals_delete, methods=["DELETE"]),
     Route("/api/status", endpoint=api_status, methods=["GET"]),
     Route("/api/tools", endpoint=api_tools, methods=["GET"]),
     Route("/api/call-tool", endpoint=api_call_tool, methods=["POST"]),
@@ -478,13 +588,22 @@ routes = [
     WebSocketRoute("/ws/terminal", endpoint=terminal_websocket_endpoint),
 ]
 
+class CacheControlMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        response = await call_next(request)
+        if request.url.path.startswith("/static/") or request.url.path == "/":
+            response.headers["Cache-Control"] = "no-cache, must-revalidate, max-age=0"
+        return response
+
+
 middleware = [
+    Middleware(CacheControlMiddleware),
     Middleware(
         CORSMiddleware,
         allow_origins=["*"],
         allow_methods=["*"],
         allow_headers=["*"],
-    )
+    ),
 ]
 
 app = Starlette(routes=routes, middleware=middleware)
@@ -494,8 +613,9 @@ if STATIC_DIR.exists():
 
 def run(host: str = "0.0.0.0", port: int = 8000):
     """Run the Web GUI server."""
+    _ensure_ttyd_daemons()
     print(f"\n=======================================================")
-    print(f"  Ubuntu MCP Server Web GUI & Interactive Terminal")
+    print(f"  Ubuntu MCP Server Web GUI, Terminal & Portals Hub")
     print(f"  Open in your browser: http://localhost:{port}")
     print(f"=======================================================\n")
     uvicorn.run(app, host=host, port=port, log_level="info")

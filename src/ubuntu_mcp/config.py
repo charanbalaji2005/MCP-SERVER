@@ -60,11 +60,6 @@ def load_settings() -> Settings:
         max_directory_depth=_env_int("MCP_MAX_DIRECTORY_DEPTH", 12),
         log_level=os.getenv("MCP_LOG_LEVEL", "INFO").upper(),
         allow_private_network=_env_bool("MCP_ALLOW_PRIVATE_NETWORK", False),
-        # "stdio" (default): a local client launches this process directly --
-        # this is the only mode that needs no auth of its own, because the
-        # client owns the process. "streamable-http": binds a network port
-        # for remote access; you are responsible for putting this behind
-        # TLS + auth (e.g. a reverse proxy) before exposing it publicly.
         transport=os.getenv("MCP_TRANSPORT", "stdio").strip().lower(),
         http_host=os.getenv("MCP_HTTP_HOST", "127.0.0.1"),
         http_port=_env_int("MCP_HTTP_PORT", 8765),

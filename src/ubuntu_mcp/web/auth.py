@@ -21,6 +21,7 @@ from typing import Optional
 from ..config import SETTINGS
 
 AUTH_FILE = SETTINGS.workspace_root / ".auth_config.json"
+SESSIONS_FILE = SETTINGS.workspace_root / ".auth_sessions.json"
 
 
 def _hash_password(password: str, salt_hex: Optional[str] = None) -> tuple[str, str]:
@@ -46,21 +47,27 @@ class UserRecord:
 
 
 class AuthStore:
-    def __init__(self, storage_file: Path = AUTH_FILE):
+    def __init__(self, storage_file: Path = AUTH_FILE, sessions_file: Path = SESSIONS_FILE):
         self.file_path = storage_file
-        self._sessions: dict[str, str] = {}  # token -> username
+        self.sessions_path = sessions_file
+        self._sessions: dict[str, str] = {}
         self._users: dict[str, UserRecord] = {}
         self._load()
 
     def _load(self):
-        if not self.file_path.exists():
-            return
-        try:
-            data = json.loads(self.file_path.read_text(encoding="utf-8"))
-            for u in data.get("users", []):
-                self._users[u["username"]] = UserRecord(**u)
-        except Exception:
-            pass
+        if self.file_path.exists():
+            try:
+                data = json.loads(self.file_path.read_text(encoding="utf-8"))
+                for u in data.get("users", []):
+                    self._users[u["username"]] = UserRecord(**u)
+            except Exception:
+                pass
+
+        if self.sessions_path.exists():
+            try:
+                self._sessions = json.loads(self.sessions_path.read_text(encoding="utf-8"))
+            except Exception:
+                pass
 
     def _save(self):
         try:
@@ -72,6 +79,13 @@ class AuthStore:
             self.file_path.write_text(json.dumps(data, indent=2), encoding="utf-8")
         except Exception as e:
             print(f"[AuthStore] Failed to save auth config: {e}")
+
+    def _save_sessions(self):
+        try:
+            self.sessions_path.parent.mkdir(parents=True, exist_ok=True)
+            self.sessions_path.write_text(json.dumps(self._sessions), encoding="utf-8")
+        except Exception:
+            pass
 
     def is_setup_completed(self) -> bool:
         """Return True if at least one user account exists."""
@@ -123,6 +137,7 @@ class AuthStore:
     def create_session(self, username: str) -> str:
         token = secrets.token_hex(32)
         self._sessions[token] = username
+        self._save_sessions()
         return token
 
     def validate_session(self, token: Optional[str]) -> Optional[UserRecord]:
@@ -135,7 +150,8 @@ class AuthStore:
 
     def revoke_session(self, token: str):
         self._sessions.pop(token, None)
+        self._save_sessions()
 
 
-# Global auth instance
 AUTH = AuthStore()
+

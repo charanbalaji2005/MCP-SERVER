@@ -12,7 +12,6 @@ import time
 import webbrowser
 from pathlib import Path
 
-# Ensure src/ is on sys.path
 root_dir = Path(__file__).resolve().parent
 src_dir = root_dir / "src"
 if str(src_dir) not in sys.path:
