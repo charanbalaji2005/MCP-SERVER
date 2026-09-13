@@ -22,6 +22,13 @@ import urllib.request
 from pathlib import Path
 from typing import Any, Optional
 
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 CLI_VERSION = "2.5.0"
 SERVER_VERSION = "1.0.0"
 
@@ -347,9 +354,15 @@ def cmd_metrics(args: list[str]):
     disk = data.get("disk", {})
     procs = data.get("top_processes", [])
 
-    cpu_pct = cpu.get("percent", 0.0)
-    mem_pct = mem.get("percent", 0.0)
-    disk_pct = disk.get("percent", 0.0)
+    cpu_pct = float(data.get("cpu_percent") or (data.get("cpu") or {}).get("percent") or 0.0)
+    cpu_count = data.get("cpu_count") or (data.get("cpu") or {}).get("cores_logical") or 1
+    mem_pct = float(data.get("memory_percent") or (data.get("memory") or {}).get("percent") or 0.0)
+    mem_used = data.get("memory_used_gb") or round(((data.get("memory") or {}).get("used_mb") or 0) / 1024, 2)
+    mem_total = data.get("memory_total_gb") or round(((data.get("memory") or {}).get("total_mb") or 0) / 1024, 2)
+    disk_pct = float(data.get("disk_percent") or (data.get("disk") or {}).get("percent") or 0.0)
+    disk_used = data.get("disk_used_gb") or 0.0
+    disk_total = data.get("disk_total_gb") or 0.0
+    procs = data.get("processes") or data.get("top_processes") or []
 
     def bar(pct: float, width: int = 24) -> str:
         filled = int((pct / 100.0) * width)
@@ -358,16 +371,20 @@ def cmd_metrics(args: list[str]):
 
     print(f"\n{bold('Ubuntu MCP Live System Metrics')}")
     print(f"{gray('─' * 60)}")
-    print(f"  {bold('CPU Utilization:')}  [{bar(cpu_pct)}] {cpu_pct:>5.1f}% ({cpu.get('cores_logical')} cores)")
-    print(f"  {bold('Memory Usage:')}     [{bar(mem_pct)}] {mem_pct:>5.1f}% ({mem.get('used_mb')}MB / {mem.get('total_mb')}MB)")
-    print(f"  {bold('Workspace Disk:')}  [{bar(disk_pct)}] {disk_pct:>5.1f}% ({disk.get('used_gb')}GB / {disk.get('total_gb')}GB)")
+    print(f"  {bold('CPU Utilization:')}  [{bar(cpu_pct)}] {cpu_pct:>5.1f}% ({cpu_count} cores)")
+    print(f"  {bold('Memory Usage:')}     [{bar(mem_pct)}] {mem_pct:>5.1f}% ({mem_used}GB / {mem_total}GB)")
+    print(f"  {bold('Workspace Disk:')}  [{bar(disk_pct)}] {disk_pct:>5.1f}% ({disk_used}GB / {disk_total}GB)")
     print(f"{gray('─' * 60)}")
 
     if procs:
         print(f"  {bold('TOP ACTIVE PROCESSES:')}")
-        print(f"    {gray('PID':<8)} {gray('NAME':<24)} {gray('CPU %':<10)} {gray('MEM %')}")
+        proc_header = f"    {'PID':<8} {'NAME':<24} {'CPU %':<10} {'MEM %'}"
+        print(gray(proc_header))
         for p in procs[:6]:
-            print(f"    {p.get('pid'):<8} {p.get('name')[:22]:<24} {str(p.get('cpu')) + '%':<10} {str(p.get('memory')) + '%'}")
+            cpu_val = f"{p.get('cpu', 0.0)}%"
+            mem_val = f"{p.get('memory', 0.0)}%"
+            p_name = str(p.get('name', ''))[:22]
+            print(f"    {str(p.get('pid', '')):<8} {p_name:<24} {cpu_val:<10} {mem_val}")
     print()
     return 0
 
@@ -382,7 +399,8 @@ def cmd_portals(args: list[str]):
     portals = data.get("portals", [])
     print(f"\n{bold('Connected MCP Portals')} ({len(portals)} registered)")
     print(f"{gray('─' * 88)}")
-    print(f"{gray('ID':<14)} {gray('NAME':<20)} {gray('URL':<26)} {gray('TRANS':<8)} {gray('STATUS':<10)} {gray('TOOLS')}")
+    port_header = f"{'ID':<14} {'NAME':<20} {'URL':<26} {'TRANS':<8} {'STATUS':<10} {'TOOLS'}"
+    print(gray(port_header))
     print(f"{gray('─' * 88)}")
 
     for p in portals:
@@ -530,7 +548,8 @@ def cmd_tools(args: list[str]):
 
     print(f"\n{bold('Available MCP Tools')} ({len(tools)} tools found)")
     print(f"{gray('─' * 92)}")
-    print(f"{gray('TOOL NAME':<24)} {gray('CATEGORY':<14)} {gray('PORTAL':<12)} {gray('DESCRIPTION')}")
+    tool_header = f"{'TOOL NAME':<24} {'CATEGORY':<14} {'PORTAL':<12} {'DESCRIPTION'}"
+    print(gray(tool_header))
     print(f"{gray('─' * 92)}")
 
     for t in tools:
@@ -538,7 +557,8 @@ def cmd_tools(args: list[str]):
         cat = t.get("category", "")
         portal = t.get("portal_id", "")
         desc = (t.get("description", "") or "").split("\n")[0][:40]
-        print(f"{cyan(name):<33} {cat:<14} {portal:<12} {desc}")
+        name_str = f"{name:<24}"
+        print(f"{cyan(name_str)} {cat:<14} {portal:<12} {desc}")
     print(f"{gray('─' * 92)}\n")
     return 0
 
@@ -567,7 +587,10 @@ def cmd_info(args: list[str]):
     props = schema.get("properties", {})
     required = schema.get("required", [])
 
-    print(f"\n{bold('TOOL:')} {cyan(target.get('name'))} {gray(f'({target.get(\"category\")})')}")
+    t_name = target.get("name", "")
+    t_cat = target.get("category", "general")
+    cat_tag = gray(f"({t_cat})")
+    print(f"\n{bold('TOOL:')} {cyan(t_name)} {cat_tag}")
     print(f"{gray('─' * 60)}")
     print(f"{bold('Description:')} {target.get('description') or 'No description provided.'}")
     print(f"{bold('Portal:')}      {target.get('portal_name')} ({target.get('portal_id')})")

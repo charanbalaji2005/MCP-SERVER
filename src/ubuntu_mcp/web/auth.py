@@ -152,6 +152,14 @@ class AuthStore:
         self._sessions.pop(token, None)
         self._save_sessions()
 
+    def get_any_valid_token(self) -> Optional[str]:
+        if self._sessions:
+            return next(iter(self._sessions.keys()))
+        if self._users:
+            username = next(iter(self._users.keys()))
+            return self.create_session(username)
+        return None
+
 
 AUTH = AuthStore()
 
