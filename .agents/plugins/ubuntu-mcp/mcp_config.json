@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "ubuntu-mcp": {
+      "command": "cmd.exe",
+      "args": [
+        "/c",
+        "d:/ubuntu-mcp-server/ubuntu-mcp-server/run_ubuntu_mcp.bat"
+      ]
+    }
+  }
+}

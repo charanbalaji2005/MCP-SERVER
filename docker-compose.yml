@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  ubuntu-mcp:
+    build: .
+    image: ubuntu-mcp-server:latest
+    container_name: ubuntu-mcp-server
+    restart: unless-stopped
+    ports:
+      - "8000:8000"  # Web Console & Interactive Terminal
+      - "8765:8765"  # MCP Streamable-HTTP Protocol Endpoint
+    volumes:
+      - ./workspace:/app/workspace
+    environment:
+      - MCP_WORKSPACE=/app/workspace
+      - MCP_TRANSPORT=streamable-http
+      - MCP_HTTP_HOST=0.0.0.0
+      - MCP_HTTP_PORT=8765
+      - MCP_LOG_LEVEL=INFO

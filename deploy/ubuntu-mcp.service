@@ -1,0 +1,45 @@
+# Ubuntu MCP Server - systemd unit
+#
+# IMPORTANT: only the "streamable-http" transport makes sense as a
+# background systemd service. The "stdio" transport (the default) talks
+# over its own stdin/stdout to a single parent process (e.g. Claude Code
+# or Claude Desktop launching it directly) -- there's no persistent
+# process to supervise in that mode, so don't use this unit for it.
+#
+# Install (as a template unit, one instance per Linux user):
+#   sudo cp ubuntu-mcp.service /etc/systemd/system/ubuntu-mcp@.service
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now ubuntu-mcp@yourusername
+#   journalctl -u ubuntu-mcp@yourusername -f
+#
+# Make sure .env for that user sets:
+#   MCP_TRANSPORT=streamable-http
+#   MCP_HTTP_HOST=127.0.0.1   (keep this bound to localhost; put a
+#                              TLS-terminating, authenticating reverse
+#                              proxy such as nginx/Caddy in front of it
+#                              if you need remote/internet access)
+
+[Unit]
+Description=Ubuntu MCP Server (streamable-http) for %i
+After=network.target
+
+[Service]
+Type=simple
+User=%i
+WorkingDirectory=/home/%i/ubuntu-mcp-server
+EnvironmentFile=/home/%i/ubuntu-mcp-server/.env
+ExecStart=/home/%i/ubuntu-mcp-server/.venv/bin/python -m ubuntu_mcp
+Restart=on-failure
+RestartSec=3
+StandardOutput=journal
+StandardError=journal
+
+# Light hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=read-only
+ReadWritePaths=/home/%i/ubuntu-mcp-server/workspace
+
+[Install]
+WantedBy=multi-user.target
